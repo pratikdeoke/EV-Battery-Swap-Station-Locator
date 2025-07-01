@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Dashboard</title>
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+</head>
+<body>
+  <h2>Hello <%= user %></h2>
+  <input type="text" id="search" placeholder="Enter city or pincode">
+  <div id="station-list">
+    <% stations.forEach(station => { %>
+      <div class="station">
+        <h3><%= station.name %></h3>
+        <p><%= station.address %>, <%= station.city %>, <%= station.pincode %></p>
+        <p>Battery Types: <%= station.battery_types %></p>
+      </div>
+    <% }) %>
+  </div>
+  <div id="map"></div>
+
+  <script id="stations-data" type="application/json">
+    <%- JSON.stringify(stations) %>
+  </script>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script>
+    const stations = JSON.parse(document.getElementById('stations-data').textContent);
+    const map = L.map('map').setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+    stations.forEach(s => {
+      if (s.latitude && s.longitude) {
+        L.marker([s.latitude, s.longitude]).addTo(map)
+          .bindPopup(`${s.name}<br>${s.city}, ${s.pincode}`);
+      }
+    });
+
+    document.getElementById('search').addEventListener('input', function () {
+      const query = this.value.toLowerCase();
+      document.querySelectorAll('.station').forEach(div => {
+        div.style.display = div.innerText.toLowerCase().includes(query) ? 'block' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>

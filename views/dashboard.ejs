@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EV Battery Locator - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        html {
+            font-family: 'Inter', sans-serif;
+        }
+        #map {
+            height: 400px;
+            width: 100%;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+
+        @media (max-width: 768px) {
+            #map {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-green-900 text-gray-100 min-h-screen flex flex-col">
+
+    <!-- Navbar -->
+    <nav class="bg-gray-800 bg-opacity-80 backdrop-filter backdrop-blur-lg p-4 shadow-lg sticky top-0 z-50 rounded-b-lg">
+        <div class="container mx-auto flex flex-col md:flex-row justify-between items-center">
+            <a href="/" class="text-3xl font-bold text-green-400 mb-2 md:mb-0 hover:text-green-300 transition-colors duration-300">
+                Dashboard
+            </a>
+
+            <!-- Links -->
+            <div class="flex flex-wrap justify-center space-x-4">
+                <a href="/" class="nav-link text-lg bg-red-600 hover:bg-red-700 text-white px-4 py-1 rounded-md transition-colors duration-300 shadow-md">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="flex-grow container mx-auto p-4 md:p-8">
+        <h2 class="text-4xl md:text-5xl font-extrabold text-white text-center mb-10 mt-6">
+            <!-- Hello <span class="text-green-400"><%= user %></span>! -->
+        </h2>
+
+        <div class="bg-gray-800 bg-opacity-80 rounded-xl shadow-2xl p-6 md:p-8 mb-8">
+            <!-- Search Bar -->
+            <div class="mb-8">
+                <label for="search" class="sr-only">Search for stations</label>
+                <input
+                    type="text"
+                    id="search"
+                    placeholder="Search by city or pincode..."
+                    class="w-full px-5 py-3 rounded-lg bg-gray-700 border border-gray-600 text-gray-200 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-colors duration-200 text-lg"
+                >
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Station List -->
+                <div id="station-list" class="bg-gray-700 bg-opacity-70 p-6 rounded-xl shadow-lg max-h-96 overflow-y-auto custom-scrollbar">
+                    <h3 class="text-2xl font-bold text-gray-200 mb-6">Available Stations</h3>
+                    <% stations.forEach(station => { %>
+                        <div class="station bg-gray-900 rounded-lg p-4 mb-4 shadow-md border border-gray-700 transition-transform transform hover:scale-[1.01]">
+                            <h4 class="text-xl font-semibold text-green-300 mb-1"><%= station.name %></h4>
+                            <p class="text-gray-300 text-sm"><%= station.address %>, <%= station.city %>, <%= station.pincode %></p>
+                            <p class="text-gray-400 text-sm mt-1">Battery Types: <span class="font-medium"><%= station.battery_types %></span></p>
+                        </div>
+                    <% }) %>
+                </div>
+
+                <!-- Map -->
+                <div id="map" class="bg-gray-700 bg-opacity-70 rounded-xl shadow-lg">
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 bg-opacity-80 p-6 text-center text-gray-400 mt-auto rounded-t-lg">
+        <div class="container mx-auto">
+            <p>&copy; 2025 EV Battery Locator. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script id="stations-data" type="application/json">
+        <%- JSON.stringify(stations) %>
+    </script>
+
+    <!-- Map -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .custom-scrollbar::-webkit-scrollbar {
+                width: 8px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-track {
+                background: #374151; /* gray-700 */
+                border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: #10B981; /* green-500 */
+                border-radius: 10px;
+            }
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: #059669; /* green-600 */
+            }
+        `;
+        document.head.appendChild(style);
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const stations = JSON.parse(document.getElementById('stations-data').textContent);
+
+            const map = L.map('map').setView([20.5937, 78.9629], 5);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            // markers for each station
+            stations.forEach(s => {
+                if (s.latitude && s.longitude) {
+                    L.marker([s.latitude, s.longitude]).addTo(map)
+                        .bindPopup(`
+                            <h4 class="font-semibold text-gray-900">${s.name}</h4>
+                            <p class="text-gray-700">${s.address}, ${s.city}, ${s.pincode}</p>
+                            <p class="text-gray-600">Battery Types: ${s.battery_types}</p>
+                        `);
+                }
+            });
+
+            // Search function
+            document.getElementById('search').addEventListener('input', function () {
+                const query = this.value.toLowerCase();
+                const stationElements = document.querySelectorAll('.station');
+
+                let firstVisibleStation = null;
+
+                stationElements.forEach(div => {
+                    const stationText = div.innerText.toLowerCase();
+                    if (stationText.includes(query)) {
+                        div.style.display = 'block';
+                        if (!firstVisibleStation) {
+                            firstVisibleStation = div;
+                        }
+                    } else {
+                        div.style.display = 'none';
+                    }
+                });
+
+                if (firstVisibleStation) {
+                    firstVisibleStation.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+        });
+    </script>
+</body>
+</html>
