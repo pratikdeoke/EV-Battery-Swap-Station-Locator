@@ -25,7 +25,7 @@ Here are some screenshots of the EV Battery Locator site:
 - **Map Integration**: Leaflet.js
 - **Version Control**: Git & GitHub
 
-- ## Features
+## Features
 
 - 🔐 User registration and login system
 - 📍 Search battery swap stations by city or pincode
