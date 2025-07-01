@@ -17,7 +17,9 @@ Here are some screenshots of the EV Battery Locator site:
 
 ![Dashboard](https://github.com/pratikdeoke/EV-Battery-Swap-Station-Locator/blob/main/images/dashboard_c.png)
 
-**Frontend**: HTML, CSS (Tailwind), JavaScript
+## Tech Stack
+
+- **Frontend**: HTML, CSS (Tailwind), JavaScript
 - **Backend**: Node.js, Express.js
 - **Database**: PostgreSQL
 - **Map Integration**: Leaflet.js
